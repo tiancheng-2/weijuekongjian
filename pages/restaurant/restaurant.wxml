@@ -1,0 +1,88 @@
+<!--pages/restaurant/restaurant.wxml-->
+<view class="container">
+  <!-- 餐厅顶部信息区 -->
+  <view class="restaurant-header">
+    <view class="restaurant-info">
+      <view class="restaurant-name">{{restaurantName}}</view>
+      <view class="restaurant-address">{{restaurantAddress}}</view>
+    </view>
+    <view class="edit-icon" bindtap="onEditRestaurant">✏︎</view>
+  </view>
+
+  <!-- 筛选标签 -->
+  <view wx:if="{{mustTryDishes.length > 0 || avoidDishes.length > 0}}" class="filter-tabs">
+    <view class="filter-tab {{currentFilter === 'all' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="all">
+      <text class="filter-tab-text">全部</text>
+    </view>
+    <view class="filter-tab {{currentFilter === 'must-try' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="must-try">
+      <text class="filter-tab-text">必点</text>
+    </view>
+    <view class="filter-tab {{currentFilter === 'avoid' ? 'active' : ''}}" bindtap="onFilterChange" data-filter="avoid">
+      <text class="filter-tab-text">避坑</text>
+    </view>
+  </view>
+
+  <!-- 全部视图：左右两列 -->
+  <view wx:if="{{currentFilter === 'all' && (mustTryDishes.length > 0 || avoidDishes.length > 0)}}" class="dishes-all-view">
+    <!-- 左侧：必点 -->
+    <view class="dishes-column">
+      <view class="column-title">必点</view>
+      <view class="dish-grid">
+        <view class="dish-card" wx:for="{{mustTryDishes}}" wx:key="_id" bindtap="onViewDish" data-id="{{item._id}}" data-name="{{item.dishName}}" data-rating="{{item.rating}}" data-photo="{{item.photoUrl}}" data-note="{{item.note}}">
+          <image wx:if="{{item.photoUrl}}" class="dish-card-image" src="{{item.photoUrl}}" mode="aspectFill"></image>
+          <view class="dish-card-name">{{item.dishName}}</view>
+        </view>
+      </view>
+      <view wx:if="{{mustTryDishes.length === 0}}" class="column-empty">暂无</view>
+    </view>
+
+    <!-- 右侧：避坑 -->
+    <view class="dishes-column">
+      <view class="column-title">避坑</view>
+      <view class="dish-grid">
+        <view class="dish-card" wx:for="{{avoidDishes}}" wx:key="_id" bindtap="onViewDish" data-id="{{item._id}}" data-name="{{item.dishName}}" data-rating="{{item.rating}}" data-photo="{{item.photoUrl}}" data-note="{{item.note}}">
+          <image wx:if="{{item.photoUrl}}" class="dish-card-image" src="{{item.photoUrl}}" mode="aspectFill"></image>
+          <view class="dish-card-name">{{item.dishName}}</view>
+        </view>
+      </view>
+      <view wx:if="{{avoidDishes.length === 0}}" class="column-empty">暂无</view>
+    </view>
+  </view>
+
+  <!-- 必点视图：双列网格 -->
+  <view wx:if="{{currentFilter === 'must-try'}}" class="dishes-single-view">
+    <view class="dish-grid-full">
+      <view class="dish-card" wx:for="{{mustTryDishes}}" wx:key="_id" bindtap="onViewDish" data-id="{{item._id}}" data-name="{{item.dishName}}" data-rating="{{item.rating}}" data-photo="{{item.photoUrl}}" data-note="{{item.note}}">
+        <image wx:if="{{item.photoUrl}}" class="dish-card-image" src="{{item.photoUrl}}" mode="aspectFill"></image>
+        <view class="dish-card-name">{{item.dishName}}</view>
+      </view>
+    </view>
+    <view wx:if="{{mustTryDishes.length === 0}}" class="view-empty">还没有必点菜品</view>
+  </view>
+
+  <!-- 避坑视图：双列网格 -->
+  <view wx:if="{{currentFilter === 'avoid'}}" class="dishes-single-view">
+    <view class="dish-grid-full">
+      <view class="dish-card" wx:for="{{avoidDishes}}" wx:key="_id" bindtap="onViewDish" data-id="{{item._id}}" data-name="{{item.dishName}}" data-rating="{{item.rating}}" data-photo="{{item.photoUrl}}" data-note="{{item.note}}">
+        <image wx:if="{{item.photoUrl}}" class="dish-card-image" src="{{item.photoUrl}}" mode="aspectFill"></image>
+        <view class="dish-card-name">{{item.dishName}}</view>
+      </view>
+    </view>
+    <view wx:if="{{avoidDishes.length === 0}}" class="view-empty">还没有避坑菜品</view>
+  </view>
+
+  <!-- 无菜品提示 -->
+  <view wx:if="{{mustTryDishes.length === 0 && avoidDishes.length === 0}}" class="view-empty">
+    还没有记录菜品，点击下方按钮记下第一道吧
+  </view>
+
+  <!-- 底部占位 -->
+  <view class="bottom-placeholder"></view>
+
+  <!-- 固定底部按钮 -->
+  <view class="fixed-bottom-btn">
+    <view class="fixed-btn" bindtap="goToAddDishes">
+      <text class="fixed-btn-text">新增菜品</text>
+    </view>
+  </view>
+</view>

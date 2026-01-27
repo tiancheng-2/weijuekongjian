@@ -1,6 +1,4 @@
 {
-  "navigationBarTitleText": "Edit Restaurant",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#FFFFFF"
+  "usingComponents": {},
+  "navigationBarTitleText": "编辑餐厅"
 }

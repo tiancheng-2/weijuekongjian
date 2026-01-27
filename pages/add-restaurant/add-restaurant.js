@@ -1,10 +1,10 @@
-// pages/add-dishes/add-dishes.js
+// pages/add-restaurant/add-restaurant.js
 const validator = require('../../utils/validator');
 
 Page({
   data: {
-    restaurantId: '',
     restaurantName: '',
+    restaurantAddress: '',
     dishes: [
       { name: '', rating: '', note: '' },  // 默认不选中
       { name: '', rating: '', note: '' },
@@ -12,24 +12,19 @@ Page({
     ]
   },
 
-  onLoad(options) {
-    const restaurantId = options.restaurantId || '';
-    const restaurantName = decodeURIComponent(options.restaurantName || '');
-
-    if (!restaurantId) {
-      wx.showToast({
-        title: '参数错误',
-        icon: 'none'
-      });
-      setTimeout(() => {
-        wx.navigateBack();
-      }, 1500);
-      return;
-    }
-
+  // 餐厅名称输入
+  onNameInput(e) {
+    const value = validator.validateRestaurantName(e.detail.value);
     this.setData({
-      restaurantId: restaurantId,
-      restaurantName: restaurantName
+      restaurantName: value
+    });
+  },
+
+  // 餐厅地址输入
+  onAddressInput(e) {
+    const value = validator.validateRestaurantAddress(e.detail.value);
+    this.setData({
+      restaurantAddress: value
     });
   },
 
@@ -92,7 +87,35 @@ Page({
 
   // 保存
   onSave() {
-    const { restaurantId, dishes } = this.data;
+    const { restaurantName, restaurantAddress, dishes } = this.data;
+
+    // 验证餐厅名称
+    if (validator.isEmpty(restaurantName)) {
+      wx.showToast({
+        title: '请输入餐厅名称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (!validator.isLengthValid(restaurantName, 1, 15)) {
+      wx.showToast({
+        title: '餐厅名称为1-15字',
+        icon: 'none'
+      });
+      return;
+    }
+
+    // 验证餐厅地址（可选）
+    if (restaurantAddress && !validator.isEmpty(restaurantAddress)) {
+      if (!validator.isLengthValid(restaurantAddress, 2, 30)) {
+        wx.showToast({
+          title: '餐厅地址为2-30字',
+          icon: 'none'
+        });
+        return;
+      }
+    }
 
     // 过滤有效菜品（名称不为空）
     const validDishes = dishes.filter(d => {
@@ -130,15 +153,6 @@ Page({
       return true;
     });
 
-    // 至少要添加一个菜品
-    if (validDishes.length === 0) {
-      wx.showToast({
-        title: '请至少添加一道菜品',
-        icon: 'none'
-      });
-      return;
-    }
-
     wx.showLoading({
       title: '保存中...',
       mask: true
@@ -146,35 +160,59 @@ Page({
 
     const db = wx.cloud.database();
     const _ = db.command;
+    let restaurantId = '';
 
-    // 批量保存菜品
-    const dishPromises = validDishes.map(dish => {
-      return db.collection('dishes').add({
+    // 1. 保存餐厅
+    db.collection('restaurants')
+      .add({
         data: {
-          dishName: dish.name.trim(),
-          rating: dish.rating,
-          note: dish.note.trim() || '',
-          photoUrl: '',
-          restaurantId: restaurantId,
+          name: restaurantName.trim(),
+          address: restaurantAddress.trim() || '',
+          mustTryCount: 0,
+          avoidCount: 0,
           createTime: db.serverDate()
         }
-      });
-    });
-
-    Promise.all(dishPromises)
-      .then(results => {
-        // 更新餐厅统计
-        const mustTryCount = validDishes.filter(d => d.rating === 'must-try').length;
-        const avoidCount = validDishes.filter(d => d.rating === 'avoid').length;
+      })
+      .then(res => {
+        restaurantId = res._id;
         
-        return db.collection('restaurants')
-          .doc(restaurantId)
-          .update({
-            data: {
-              mustTryCount: _.inc(mustTryCount),
-              avoidCount: _.inc(avoidCount)
-            }
+        // 2. 如果有菜品，批量保存
+        if (validDishes.length > 0) {
+          const dishPromises = validDishes.map(dish => {
+            return db.collection('dishes').add({
+              data: {
+                dishName: dish.name.trim(),
+                rating: dish.rating,
+                note: dish.note.trim() || '',
+                photoUrl: '',
+                restaurantId: restaurantId,
+                createTime: db.serverDate()
+              }
+            });
           });
+          
+          return Promise.all(dishPromises);
+        }
+        
+        return Promise.resolve([]);
+      })
+      .then(dishResults => {
+        // 3. 更新餐厅统计
+        if (validDishes.length > 0) {
+          const mustTryCount = validDishes.filter(d => d.rating === 'must-try').length;
+          const avoidCount = validDishes.filter(d => d.rating === 'avoid').length;
+          
+          return db.collection('restaurants')
+            .doc(restaurantId)
+            .update({
+              data: {
+                mustTryCount: mustTryCount,
+                avoidCount: avoidCount
+              }
+            });
+        }
+        
+        return Promise.resolve();
       })
       .then(res => {
         wx.hideLoading();
@@ -184,9 +222,11 @@ Page({
           duration: 1000
         });
 
-        // 返回餐厅详情页
+        // 跳转到餐厅详情页
         setTimeout(() => {
-          wx.navigateBack();
+          wx.redirectTo({
+            url: `/pages/restaurant/restaurant?id=${restaurantId}&name=${encodeURIComponent(restaurantName.trim())}`
+          });
         }, 1000);
       })
       .catch(err => {

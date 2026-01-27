@@ -1,80 +1,105 @@
 <!--pages/dish/dish.wxml-->
-<view class="page-container">
-
-  <!-- Hero Area 顶部沉浸区 -->
-  <view class="hero-area">
-    <!-- 菜品图片 -->
-    <image
-      class="hero-image"
-      src="{{dish.photoUrl || 'https://placehold.co/600x600/F2F2F7/8E8E93?text=Dish'}}"
-      mode="aspectFill"
-      lazy-load="{{true}}"
-    ></image>
-
-    <!-- 渐变遮罩 -->
-    <view class="hero-mask"></view>
-
-    <!-- 评分标记 -->
-    <view class="dish-badge {{dish.rating}}">
-      <text class="badge-text">
-        {{dish.rating === 'must-try' ? '👍 必点' : '⚠️ 避坑'}}
-      </text>
-    </view>
-
-    <!-- 菜品基本信息 -->
-    <view class="hero-content">
-      <text class="dish-name">{{dish.dishName || dish.name || '加载中...'}}</text>
-    </view>
-  </view>
-
-  <!-- Info Sheet 悬浮信息卡 -->
-  <view class="info-sheet">
-    <!-- 餐厅信息 -->
-    <view class="info-item" bindtap="onNavigateToRestaurant">
-      <view class="info-icon">🍽️</view>
-      <view class="info-content">
-        <text class="info-text">{{restaurantName || '餐厅'}}</text>
-        <text class="info-arrow">›</text>
+<view class="container">
+  <!-- 非编辑模式 -->
+  <view wx:if="{{!isEditing}}">
+    <!-- 菜品顶部信息 -->
+    <view class="dish-header">
+      <!-- 菜名和编辑图标同行 -->
+      <view class="name-row">
+        <view class="dish-name">{{dishName}}</view>
+        <view class="edit-icon" bindtap="onEdit">✏︎</view>
       </view>
+      
+      <!-- 属性标签 -->
+      <view class="dish-tag">{{rating === 'must-try' ? '必点' : '避坑'}}</view>
+      
+      <!-- 餐厅名称（无图标）-->
+      <view wx:if="{{restaurantName}}" class="dish-restaurant">{{restaurantName}}</view>
     </view>
 
-    <!-- 笔记 -->
-    <view class="info-item" wx:if="{{dish.note}}">
-      <view class="info-icon">📝</view>
-      <view class="info-content">
-        <text class="info-text">{{dish.note}}</text>
-      </view>
+    <!-- 菜品照片展示 -->
+    <view wx:if="{{photos.length > 0}}" class="photo-section">
+      <swiper class="photo-swiper" indicator-dots="{{photos.length > 1}}" indicator-color="rgba(203, 213, 225, 0.4)" indicator-active-color="#CBD5E1">
+        <swiper-item wx:for="{{photos}}" wx:key="index">
+          <image class="photo-image" src="{{item}}" mode="aspectFill" bindtap="viewPhoto" data-index="{{index}}"></image>
+        </swiper-item>
+      </swiper>
     </view>
 
-    <!-- 标签 -->
-    <view class="info-tags" wx:if="{{dish.tags && dish.tags.length > 0}}">
-      <view class="tag" wx:for="{{dish.tags}}" wx:key="index">
-        {{item}}
+    <!-- 菜品笔记 -->
+    <view class="note-section">
+      <view class="note-title">菜品笔记</view>
+      <view wx:if="{{note}}" class="note-text">{{note}}</view>
+      <view wx:else class="note-empty">暂无笔记</view>
+    </view>
+
+    <!-- 删除按钮 -->
+    <view class="delete-section">
+      <view class="delete-btn" bindtap="onDeleteDish">
+        <text class="delete-btn-text">删除这道菜</text>
       </view>
     </view>
   </view>
 
-  <!-- 底部占位 -->
-  <view class="bottom-spacer"></view>
+  <!-- 编辑模式 -->
+  <view wx:else class="edit-mode">
+    <view class="edit-title">编辑菜品</view>
 
-  <!-- Action Bar 底部操作栏 -->
-  <view class="action-bar">
-    <view class="action-buttons">
-      <!-- 分享按钮 -->
-      <button class="action-btn secondary" open-type="share">
-        <text class="action-icon">↗</text>
-      </button>
-
-      <!-- 编辑按钮 -->
-      <view class="action-btn primary" bindtap="onEdit">
-        <text class="action-text">编辑</text>
+    <!-- 编辑表单 -->
+    <view class="edit-form">
+      <!-- 菜品名称 -->
+      <view class="edit-item">
+        <view class="edit-label">
+          菜品名称
+          <text class="char-count">{{editingName.length}}/20</text>
+        </view>
+        <input 
+          class="edit-input" 
+          placeholder="菜品名称" 
+          value="{{editingName}}" 
+          bindinput="onEditNameInput"
+          maxlength="20"
+        />
       </view>
 
-      <!-- 删除按钮 -->
-      <view class="action-btn danger" bindtap="onDelete">
-        <text class="action-text">删除</text>
+      <!-- 属性选择 -->
+      <view class="edit-item">
+        <view class="edit-label">属性</view>
+        <view class="rating-buttons">
+          <view class="rating-btn {{editingRating === 'must-try' ? 'active' : ''}}" bindtap="onEditRatingChange" data-rating="must-try">
+            <text class="rating-btn-text">必点</text>
+          </view>
+          <view class="rating-btn {{editingRating === 'avoid' ? 'active' : ''}}" bindtap="onEditRatingChange" data-rating="avoid">
+            <text class="rating-btn-text">避坑</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 菜品笔记 -->
+      <view class="edit-item">
+        <view class="edit-label">
+          菜品笔记（可选）
+          <text class="char-count">{{editingNote.length}}/50</text>
+        </view>
+        <textarea 
+          class="edit-textarea" 
+          placeholder="记录一下这道菜..." 
+          value="{{editingNote}}" 
+          bindinput="onEditNoteInput"
+          maxlength="50"
+          auto-height
+        />
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="edit-actions">
+      <view class="action-btn cancel-btn" bindtap="onCancel">
+        <text class="action-btn-text">取消</text>
+      </view>
+      <view class="action-btn save-btn" bindtap="onSave">
+        <text class="action-btn-text">保存</text>
       </view>
     </view>
   </view>
-
 </view>

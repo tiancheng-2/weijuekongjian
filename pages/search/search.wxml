@@ -1,141 +1,69 @@
-<!--pages/search/index.wxml-->
-<view class="page-container">
-  
-  <!-- Search Bar 搜索栏 -->
+<!--pages/search/search.wxml-->
+<view class="container">
+  <!-- 搜索框（自动聚焦，无图标）-->
   <view class="search-bar">
-    <view class="search-input-wrapper">
-      <text class="search-icon">🔍</text>
-      <input 
-        class="search-input"
-        model:value="{{keyword}}"
-        placeholder="搜索餐厅或菜品"
-        placeholder-class="search-placeholder"
-        confirm-type="search"
-        bindfocus="onSearchFocus"
-        bindblur="onSearchBlur"
-        bindinput="onSearchInput"
-        bindconfirm="onSearchConfirm"
-      />
-      <view 
-        class="clear-btn {{keyword ? 'show' : ''}}" 
-        bindtap="onClearKeyword"
-        catchtap
-      >
-        <text class="clear-icon">×</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 搜索前的状态：历史记录 + 热门标签 -->
-  <view class="search-idle {{searchActive && !keyword ? 'show' : 'hide'}}">
-    
-    <!-- 搜索历史 -->
-    <view class="history-section" wx:if="{{history.length > 0}}">
-      <view class="section-header">
-        <text class="section-title">搜索历史</text>
-        <view class="clear-history" bindtap="onClearHistory">
-          <text class="clear-text">清空</text>
-        </view>
-      </view>
-      <view class="history-list">
-        <view 
-          class="history-item"
-          wx:for="{{history}}"
-          wx:key="index"
-        >
-          <view class="history-text" bindtap="onHistoryTap" data-keyword="{{item}}">
-            {{item}}
-          </view>
-          <view class="history-delete" bindtap="onDeleteHistory" data-index="{{index}}" catchtap>
-            <text class="delete-icon">×</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 热门标签云 -->
-    <view class="tags-section">
-      <view class="section-header">
-        <text class="section-title">热门标签</text>
-      </view>
-      <view class="tag-cloud">
-        <view 
-          class="hot-tag tag-{{item.color}}"
-          wx:for="{{hotTags}}"
-          wx:key="name"
-          bindtap="onTagTap"
-          data-keyword="{{item.name}}"
-        >
-          <text class="tag-text">{{item.name}}</text>
-        </view>
-      </view>
-    </view>
+    <input 
+      class="search-input" 
+      placeholder="搜索餐厅或菜品" 
+      value="{{searchKeyword}}" 
+      bindinput="onSearchInput"
+      focus="{{true}}"
+      confirm-type="search"
+    />
   </view>
 
   <!-- 搜索结果 -->
-  <view class="search-results {{results.length > 0 ? 'show' : 'hide'}}">
-    
-    <!-- 结果统计 -->
-    <view class="results-header" wx:if="{{results.length > 0}}">
-      <text class="results-count">找到 {{results.length}} 个结果</text>
+  <view wx:if="{{hasResults}}" class="results-section">
+    <!-- 餐厅结果 -->
+    <view wx:if="{{restaurantResults.length > 0}}" class="result-group">
+      <view class="result-title">餐厅</view>
+      <view class="result-list">
+        <view 
+          wx:for="{{restaurantResults}}" 
+          wx:key="id" 
+          class="result-item" 
+          bindtap="onSelectResult" 
+          data-type="restaurant" 
+          data-id="{{item.id}}"
+          data-name="{{item.name}}"
+        >
+          <view class="result-name">{{item.name}}</view>
+          <view class="result-info">{{item.address}}</view>
+        </view>
+      </view>
     </view>
 
-    <!-- 餐厅结果列表 -->
-    <view class="restaurant-list">
-      <view 
-        class="restaurant-card"
-        wx:for="{{results}}"
-        wx:key="_id"
-        bindtap="onResultTap"
-        data-id="{{item._id}}"
-      >
-        <!-- 餐厅图片 -->
-        <view class="card-image">
-          <image 
-            class="cover-img" 
-            src="{{item.coverImage || 'https://placehold.co/400x400/F2F2F7/8E8E93?text=Restaurant'}}" 
-            mode="aspectFill"
-            lazy-load="{{true}}"
-          ></image>
-          <view class="card-badge" wx:if="{{item.rating}}">
-            <text class="badge-star">⭐</text>
-            <text class="badge-rating">{{item.rating}}</text>
-          </view>
-        </view>
-
-        <!-- 餐厅信息 -->
-        <view class="card-info">
-          <!-- 使用富文本高亮显示 -->
-          <view class="card-name">
-            <block wx:for="{{item.nameSegments}}" wx:key="index" wx:for-item="segment">
-              <text class="{{segment.highlight ? 'highlight-word' : ''}}">{{segment.text}}</text>
-            </block>
-          </view>
-          <view class="card-meta">
-            <text class="meta-item" wx:if="{{item.tags && item.tags[0]}}">{{item.tags[0]}}</text>
-            <text class="meta-separator" wx:if="{{item.tags && item.tags[0] && item.priceLevel}}">·</text>
-            <text class="meta-item" wx:if="{{item.priceLevel}}">{{item.priceLevel}}</text>
-          </view>
-          <view class="card-address" wx:if="{{item.address}}">
-            <text class="address-icon">📍</text>
-            <text class="address-text">{{item.address}}</text>
-          </view>
+    <!-- 菜品结果 -->
+    <view wx:if="{{dishResults.length > 0}}" class="result-group">
+      <view class="result-title">菜品</view>
+      <view class="result-list">
+        <view 
+          wx:for="{{dishResults}}" 
+          wx:key="id" 
+          class="result-item" 
+          bindtap="onSelectResult" 
+          data-type="dish" 
+          data-id="{{item.id}}"
+          data-name="{{item.name}}"
+          data-rating="{{item.rating}}"
+          data-photo="{{item.photoUrl}}"
+          data-note="{{item.note}}"
+          data-restaurant-id="{{item.restaurantId}}"
+          data-restaurant-name="{{item.restaurantName}}"
+        >
+          <view class="result-name">{{item.name}}</view>
+          <view class="result-info">{{item.restaurantName}} · {{item.rating === 'must-try' ? '必点' : '避坑'}}</view>
         </view>
       </view>
     </view>
   </view>
 
   <!-- 空状态 -->
-  <view class="empty-state {{keyword && results.length === 0 && !searching ? 'show' : 'hide'}}">
-    <text class="empty-icon">🔍</text>
-    <text class="empty-title">未找到相关结果</text>
-    <text class="empty-hint">试试其他关键词吧</text>
+  <view wx:elif="{{searchKeyword.length > 0}}" class="empty-result">
+    <view class="empty-text">没有找到相关内容</view>
   </view>
 
-  <!-- 搜索中状态 -->
-  <view class="searching-state {{searching ? 'show' : 'hide'}}">
-    <view class="loading-spinner"></view>
-    <text class="loading-text">搜索中...</text>
+  <view wx:else class="empty-result">
+    <view class="empty-text">输入关键词搜索餐厅或菜品</view>
   </view>
-
 </view>

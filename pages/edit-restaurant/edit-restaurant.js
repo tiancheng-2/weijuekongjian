@@ -1,209 +1,184 @@
 // pages/edit-restaurant/edit-restaurant.js
-const restaurantService = require('../../services/restaurantService');
+const validator = require('../../utils/validator');
 
 Page({
-  /**
-   * 页面的初始数据
-   */
   data: {
-    // 餐厅ID
     restaurantId: '',
-
-    // 餐厅名称
-    name: '',
-
-    // 标签（预设 + 选中状态）
-    tags: [
-      { label: 'Lunch', selected: false },
-      { label: 'Dinner', selected: false },
-      { label: 'Cafe', selected: false },
-      { label: 'Date', selected: false },
-      { label: 'Cheap', selected: false },
-      { label: 'Fancy', selected: false }
-    ],
-
-    // 加载状态
-    loading: true
+    restaurantName: '',
+    restaurantAddress: '',
+    showDeleteModal: false
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-    console.log('[EditRestaurant] Page loaded with options:', options);
-
-    const { id } = options;
+    const { id, name, address } = options;
 
     if (!id) {
       wx.showToast({
-        title: '缺少餐厅ID',
-        icon: 'none',
-        duration: 2000
+        title: '参数错误',
+        icon: 'none'
       });
-
       setTimeout(() => {
         wx.navigateBack();
-      }, 2000);
-
+      }, 1500);
       return;
     }
 
-    this.setData({ restaurantId: id });
-    this.loadRestaurantData(id);
-  },
-
-  /**
-   * 加载餐厅数据
-   */
-  async loadRestaurantData(id) {
-    try {
-      this.setData({ loading: true });
-
-      // 获取餐厅详情
-      const restaurant = await restaurantService.getRestaurantDetail(id);
-
-      console.log('[EditRestaurant] Restaurant loaded:', restaurant);
-
-      // 更新标签选中状态
-      const tags = this.data.tags.map(tag => ({
-        ...tag,
-        selected: restaurant.tags && restaurant.tags.includes(tag.label)
-      }));
-
-      this.setData({
-        name: restaurant.name || '',
-        tags,
-        loading: false
-      });
-
-    } catch (error) {
-      console.error('[EditRestaurant] Load failed:', error);
-
-      this.setData({ loading: false });
-
-      wx.showToast({
-        title: '加载失败',
-        icon: 'none',
-        duration: 2000
-      });
-
-      setTimeout(() => {
-        wx.navigateBack();
-      }, 2000);
-    }
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-    console.log('[EditRestaurant] Page show');
-  },
-
-  // ==================== Tag Interactions ====================
-
-  /**
-   * 切换标签选中状态
-   */
-  onToggleTag(e) {
-    const { index } = e.currentTarget.dataset;
-    const tags = this.data.tags;
-
-    // 切换选中状态
-    tags[index].selected = !tags[index].selected;
-
-    this.setData({ tags });
-
-    // 震动反馈
-    wx.vibrateShort({
-      type: 'light'
+    this.setData({
+      restaurantId: id,
+      restaurantName: decodeURIComponent(name || ''),
+      restaurantAddress: address ? decodeURIComponent(address) : ''
     });
-
-    console.log('[EditRestaurant] Toggle tag:', tags[index].label, tags[index].selected);
   },
 
-  // ==================== Save ====================
+  // 餐厅名称输入（实时验证）
+  onNameInput(e) {
+    const value = validator.validateRestaurantName(e.detail.value);
+    this.setData({
+      restaurantName: value
+    });
+  },
 
-  /**
-   * 保存数据
-   */
-  async onSave() {
-    const { restaurantId, name, tags } = this.data;
+  // 餐厅地址输入（实时验证）
+  onAddressInput(e) {
+    const value = validator.validateRestaurantAddress(e.detail.value);
+    this.setData({
+      restaurantAddress: value
+    });
+  },
+
+  // 取消
+  onCancel() {
+    wx.navigateBack();
+  },
+
+  // 保存
+  onSave() {
+    const { restaurantId, restaurantName, restaurantAddress } = this.data;
 
     // 验证餐厅名称
-    if (!name || name.trim().length === 0) {
+    if (validator.isEmpty(restaurantName)) {
       wx.showToast({
         title: '请输入餐厅名称',
-        icon: 'none',
-        duration: 2000
+        icon: 'none'
       });
       return;
     }
 
-    // 提取选中的标签
-    const selectedTags = tags
-      .filter(tag => tag.selected)
-      .map(tag => tag.label);
-
-    // 构建更新数据
-    const updateData = {
-      name: name.trim(),
-      tags: selectedTags
-    };
-
-    console.log('[EditRestaurant] Updating restaurant:', restaurantId, updateData);
-
-    try {
-      // 显示加载提示
-      wx.showLoading({
-        title: '保存中...',
-        mask: true
-      });
-
-      // 调用服务更新餐厅
-      await restaurantService.updateRestaurant(restaurantId, updateData);
-
-      wx.hideLoading();
-
-      // 震动反馈
-      wx.vibrateShort({
-        type: 'heavy'
-      });
-
-      // 显示成功提示
+    if (!validator.isLengthValid(restaurantName, 1, 15)) {
       wx.showToast({
-        title: '保存成功',
-        icon: 'success',
-        duration: 1500
+        title: '餐厅名称为1-15字',
+        icon: 'none'
       });
-
-      // 延迟返回上一页
-      setTimeout(() => {
-        wx.navigateBack({
-          delta: 1
-        });
-      }, 1500);
-
-    } catch (error) {
-      console.error('[EditRestaurant] Save failed:', error);
-
-      wx.hideLoading();
-
-      wx.showToast({
-        title: error.message || '保存失败',
-        icon: 'none',
-        duration: 2000
-      });
+      return;
     }
+
+    // 验证餐厅地址（可选）
+    if (restaurantAddress && !validator.isEmpty(restaurantAddress)) {
+      if (!validator.isLengthValid(restaurantAddress, 2, 30)) {
+        wx.showToast({
+          title: '餐厅地址为2-30字',
+          icon: 'none'
+        });
+        return;
+      }
+    }
+
+    wx.showLoading({
+      title: '保存中...',
+      mask: true
+    });
+
+    const db = wx.cloud.database();
+
+    db.collection('restaurants')
+      .doc(restaurantId)
+      .update({
+        data: {
+          name: restaurantName.trim(),
+          address: restaurantAddress.trim() || ''
+        }
+      })
+      .then(res => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success',
+          duration: 1500
+        });
+
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1500);
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('保存失败', err);
+        wx.showToast({
+          title: '保存失败',
+          icon: 'none'
+        });
+      });
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-    return {
-      title: '编辑餐厅 - 味觉空间',
-      path: '/pages/edit-restaurant/edit-restaurant'
-    };
+  // 显示删除确认弹窗
+  onShowDeleteModal() {
+    this.setData({
+      showDeleteModal: true
+    });
+  },
+
+  // 隐藏删除确认弹窗
+  onHideDeleteModal() {
+    this.setData({
+      showDeleteModal: false
+    });
+  },
+
+  // 确认删除
+  onConfirmDelete() {
+    const { restaurantId } = this.data;
+
+    wx.showLoading({
+      title: '删除中...',
+      mask: true
+    });
+
+    const db = wx.cloud.database();
+
+    // 先删除该餐厅的所有菜品
+    db.collection('dishes')
+      .where({
+        restaurantId: restaurantId
+      })
+      .remove()
+      .then(res => {
+        // 再删除餐厅
+        return db.collection('restaurants')
+          .doc(restaurantId)
+          .remove();
+      })
+      .then(res => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '删除成功',
+          icon: 'success',
+          duration: 1500
+        });
+
+        setTimeout(() => {
+          wx.navigateBack({ delta: 2 }); // 返回两级到首页
+        }, 1500);
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('删除失败', err);
+        wx.showToast({
+          title: '删除失败',
+          icon: 'none'
+        });
+        this.setData({
+          showDeleteModal: false
+        });
+      });
   }
 });

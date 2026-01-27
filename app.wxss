@@ -1,177 +1,122 @@
-/* app.wxss - 全局样式配置 */
+/* app.wxss - 玻璃质感全局样式 */
 
-/* ==================== Design Tokens ==================== */
+/* 页面基础背景 - 渐变 */
 page {
-  /* Colors */
-  --bg-color: #FFFFFF;
-  --bg-color-secondary: #F9F9F9;
-  --text-main: #000000;
-  --text-secondary: #8E8E93;
-  --accent-color: #000000;
-  --card-gradient: linear-gradient(135deg, #FDFCFB 0%, #E2D1C3 100%);
-  
-  /* Spacing */
-  --page-padding: 40rpx;
-  --card-gap: 24rpx;
-  
-  /* Radius */
-  --radius-lg: 32rpx;
-  --radius-md: 24rpx;
-  --radius-sm: 16rpx;
-  
-  /* Typography */
-  --font-size-xxl: 96rpx;
-  --font-size-xl: 48rpx;
-  --font-size-lg: 36rpx;
-  --font-size-md: 28rpx;
-  --font-size-sm: 24rpx;
-  --font-size-xs: 20rpx;
-  
-  /* Shadows */
-  --shadow-sm: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 16rpx 48rpx rgba(0, 0, 0, 0.16);
-  
-  /* Global Settings */
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
-  box-sizing: border-box;
-}
-
-/* ==================== Reset ==================== */
-view, text, image, input, textarea, button, scroll-view {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-button::after {
-  border: none;
-}
-
-image {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* ==================== Common Components ==================== */
-
-/* Page Container */
-.page-container {
+  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 50%, #FFFFFF 100%);
   min-height: 100vh;
-  background-color: var(--bg-color);
-  padding: var(--page-padding);
-  padding-bottom: calc(var(--page-padding) + 120rpx);
 }
 
-/* Card Base */
-.card {
-  background: var(--bg-color);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+/* 玻璃质感卡片基础类 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20rpx) saturate(180%);
+  -webkit-backdrop-filter: blur(20rpx) saturate(180%);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08),
+              0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  border-radius: 16rpx;
 }
 
-/* Text Styles */
-.text-main {
-  color: var(--text-main);
+/* 玻璃质感按钮基础类 - 黑色 */
+.glass-btn-dark {
+  background: rgba(42, 42, 42, 0.85);
+  backdrop-filter: blur(10rpx) saturate(150%);
+  -webkit-backdrop-filter: blur(10rpx) saturate(150%);
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15),
+              0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
 }
 
-.text-secondary {
-  color: var(--text-secondary);
+.glass-btn-dark:active {
+  background: rgba(26, 26, 26, 0.9);
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
 
-.text-bold {
-  font-weight: 600;
+/* 玻璃质感按钮基础类 - 白色/透明 */
+.glass-btn-light {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10rpx) saturate(150%);
+  -webkit-backdrop-filter: blur(10rpx) saturate(150%);
+  border: 1rpx solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
 }
 
-/* Flex Utilities */
-.flex {
-  display: flex;
+.glass-btn-light:active {
+  background: rgba(255, 255, 255, 0.7);
+  transform: scale(0.98);
 }
 
-.flex-col {
-  display: flex;
-  flex-direction: column;
+/* 玻璃质感输入框 */
+.glass-input {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(15rpx) saturate(160%);
+  -webkit-backdrop-filter: blur(15rpx) saturate(160%);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.02),
+              0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  border-radius: 12rpx;
 }
 
-.flex-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(26, 26, 26, 0.1);
+  box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.03),
+              0 4rpx 16rpx rgba(0, 0, 0, 0.06),
+              0 0 0 4rpx rgba(0, 0, 0, 0.02);
 }
 
-.flex-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* 玻璃质感模态框遮罩 */
+.glass-modal-mask {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
 }
 
-/* Grid Utilities */
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--card-gap);
+/* 玻璃质感模态框内容 */
+.glass-modal-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40rpx) saturate(200%);
+  -webkit-backdrop-filter: blur(40rpx) saturate(200%);
+  border: 1rpx solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16rpx 48rpx rgba(0, 0, 0, 0.12),
+              0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 
-/* Button */
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24rpx 48rpx;
-  border-radius: var(--radius-md);
-  background-color: var(--accent-color);
-  color: #FFFFFF;
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  border: none;
-  transition: opacity 0.3s ease;
+/* 柔和分割线 */
+.glass-divider {
+  height: 1rpx;
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0) 0%, 
+    rgba(0, 0, 0, 0.06) 50%, 
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
-.btn:active {
-  opacity: 0.8;
+/* 渐变文字（保持原样）*/
+.gradient-text {
+  background: linear-gradient(135deg, #1A1A1A 0%, #404040 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* FAB (Floating Action Button) */
-.fab {
-  position: fixed;
-  right: var(--page-padding);
-  bottom: calc(var(--page-padding) + 40rpx);
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 56rpx;
-  background-color: var(--accent-color);
-  color: #FFFFFF;
-  font-size: 64rpx;
-  font-weight: 300;
-  line-height: 1;
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease;
-}
-
-.fab:active {
-  transform: scale(0.95);
-}
-
-/* Avatar Placeholders */
-.header-avatar-placeholder,
-.user-avatar-placeholder {
-  background: linear-gradient(135deg, #E8E8ED 0%, #D1D1D6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header-avatar-placeholder::before,
-.user-avatar-placeholder::before {
-  content: '👤';
-  font-size: 32rpx;
-  opacity: 0.5;
+/* 微妙光泽效果 */
+.glass-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 16rpx 16rpx 0 0;
+  pointer-events: none;
 }

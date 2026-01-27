@@ -1,6 +1,4 @@
 {
-  "navigationBarTitleText": "Add Dishes",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#FFFFFF"
+  "navigationBarTitleText": "新增菜品",
+  "usingComponents": {}
 }

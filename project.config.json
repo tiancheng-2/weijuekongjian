@@ -1,6 +1,5 @@
 {
   "description": "味觉空间 - 美食手账小程序",
-  "cloudfunctionRoot": "cloudfunctions/",
   "packOptions": {
     "ignore": [
       {

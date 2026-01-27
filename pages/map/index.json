@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "我的足迹",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#FFFFFF",
-  "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
-}

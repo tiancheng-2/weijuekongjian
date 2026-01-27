@@ -1,12 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Read(//d/weijuekongjian/**)",
-      "Bash(dir:*)"
-    ],
-    "additionalDirectories": [
-      "d:\\weijuekongjian\\pages\\profile"
+      "Bash(dir \"%APPDATA%\\\\claude-code\")",
+      "Bash(code:*)"
     ]
   }
 }

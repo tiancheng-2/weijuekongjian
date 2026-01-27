@@ -1,8 +1,4 @@
 {
-  "navigationBarTitleText": "味觉空间",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#FFFFFF",
-  "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "usingComponents": {},
+  "navigationBarTitleText": "味觉空间"
 }

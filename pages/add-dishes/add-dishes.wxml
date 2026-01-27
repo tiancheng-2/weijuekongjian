@@ -1,75 +1,84 @@
 <!--pages/add-dishes/add-dishes.wxml-->
-<view class="page-container">
-
-  <!-- 页面标题 -->
-  <view class="page-header">
-    <text class="page-title">Add Dishes</text>
-    <text class="page-subtitle">{{restaurantName}}</text>
-  </view>
-
+<view class="container">
   <!-- 菜品列表 -->
-  <view class="dishes-section">
-    <view class="dishes-list">
-      <view
-        class="dish-card"
-        wx:for="{{dishes}}"
-        wx:key="index"
-        wx:for-index="idx"
-      >
-        <!-- 左侧：图片占位 -->
-        <view class="dish-image-placeholder">
-          <text class="camera-icon">📷</text>
-        </view>
+  <view 
+    class="dish-form dish-form-{{index}}" 
+    wx:for="{{dishes}}" 
+    wx:key="index"
+    wx:for-index="index"
+  >
+    <view class="dish-number">菜品{{index + 1}}</view>
+    
+    <!-- 菜品名称 -->
+    <view class="form-item">
+      <view class="form-label">
+        菜品名称
+        <text class="char-count">{{item.name.length}}/20</text>
+      </view>
+      <input 
+        class="form-input" 
+        placeholder="菜品名称" 
+        value="{{item.name}}" 
+        bindinput="onDishNameInput"
+        bindblur="onDishNameBlur"
+        data-index="{{index}}"
+        maxlength="20"
+      />
+    </view>
 
-        <!-- 右侧：信息 -->
-        <view class="dish-info">
-          <input
-            class="dish-name-input"
-            model:value="{{dishes[idx].name}}"
-            placeholder="Dish name"
-            placeholder-class="dish-placeholder"
-            maxlength="30"
-            data-index="{{idx}}"
-          />
-          <view class="dish-actions">
-            <view class="recommend-toggle">
-              <text class="recommend-label">推荐</text>
-              <switch
-                class="recommend-switch"
-                checked="{{item.isRecommended}}"
-                bindchange="onToggleRecommend"
-                data-index="{{idx}}"
-                color="#000000"
-              />
-            </view>
-            <!-- 删除按钮（当菜品数量大于1时显示） -->
-            <view
-              wx:if="{{dishes.length > 1}}"
-              class="delete-btn"
-              bindtap="onDeleteDish"
-              data-index="{{idx}}"
-            >
-              <text class="delete-icon">🗑️</text>
-            </view>
-          </view>
+    <!-- 标记按钮 -->
+    <view class="form-item">
+      <view class="form-label">标记为</view>
+      <view class="rating-buttons">
+        <view 
+          class="rating-btn {{item.rating === 'must-try' ? 'active' : ''}}" 
+          bindtap="onSelectRating" 
+          data-index="{{index}}"
+          data-rating="must-try"
+        >
+          <text class="rating-btn-text">必点</text>
+        </view>
+        <view 
+          class="rating-btn {{item.rating === 'avoid' ? 'active' : ''}}" 
+          bindtap="onSelectRating" 
+          data-index="{{index}}"
+          data-rating="avoid"
+        >
+          <text class="rating-btn-text">避坑</text>
         </view>
       </view>
     </view>
 
-    <!-- 添加更多按钮 -->
-    <view class="add-dish-btn" bindtap="onAddDish">
-      <text class="add-dish-text">+ Add another dish</text>
+    <!-- 菜品笔记 -->
+    <view class="form-item">
+      <view class="form-label">
+        菜品笔记（可选）
+        <text class="char-count">{{item.note.length}}/50</text>
+      </view>
+      <textarea 
+        class="form-textarea" 
+        placeholder="记录一下这道菜..." 
+        value="{{item.note}}" 
+        bindinput="onDishNoteInput"
+        data-index="{{index}}"
+        maxlength="50"
+        auto-height
+      />
     </view>
   </view>
 
   <!-- 底部占位 -->
-  <view class="bottom-spacer"></view>
+  <view class="bottom-placeholder"></view>
 
-  <!-- 保存按钮（固定在底部） -->
-  <view class="save-button-container">
-    <button class="save-button" bindtap="onSave">
-      <text class="save-button-text">Save</text>
-    </button>
+  <!-- 固定底部按钮 -->
+  <view class="fixed-bottom">
+    <view class="action-buttons">
+      <view class="action-btn btn-cancel" bindtap="onCancel">
+        <text class="action-btn-text">取消</text>
+      </view>
+      <view class="action-btn btn-save" bindtap="onSave">
+        <text class="action-btn-text">保存</text>
+      </view>
+    </view>
   </view>
-
 </view>

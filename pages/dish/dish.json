@@ -1,8 +1,4 @@
 {
   "navigationBarTitleText": "菜品详情",
-  "navigationBarBackgroundColor": "#FFFFFF",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F9F9F9",
-  "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "usingComponents": {}
 }

@@ -1,9 +1,9 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/add/index",
-    "pages/detail/index",
+    "pages/add-restaurant/add-restaurant",
     "pages/edit-restaurant/edit-restaurant",
+    "pages/restaurant/restaurant",
     "pages/dish/dish",
     "pages/search/search",
     "pages/add-dishes/add-dishes"

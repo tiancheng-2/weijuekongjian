@@ -1,0 +1,121 @@
+<!--pages/add-restaurant/add-restaurant.wxml-->
+<view class="container">
+  <!-- 餐厅信息 -->
+  <view class="section">
+    <view class="section-title">餐厅信息</view>
+    
+    <view class="form-item">
+      <view class="form-label">
+        餐厅名称
+        <text class="char-count">{{restaurantName.length}}/15</text>
+      </view>
+      <input 
+        class="form-input" 
+        placeholder="请输入餐厅名称" 
+        value="{{restaurantName}}" 
+        bindinput="onNameInput"
+        maxlength="15"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">
+        餐厅地址（可选）
+        <text class="char-count">{{restaurantAddress.length}}/30</text>
+      </view>
+      <input 
+        class="form-input" 
+        placeholder="请输入餐厅地址" 
+        value="{{restaurantAddress}}" 
+        bindinput="onAddressInput"
+        maxlength="30"
+      />
+    </view>
+  </view>
+
+  <!-- 菜品列表 -->
+  <view class="section">
+    <view class="section-title">菜品（可选）</view>
+    
+    <view 
+      class="dish-form dish-form-{{index}}" 
+      wx:for="{{dishes}}" 
+      wx:key="index"
+      wx:for-index="index"
+    >
+      <view class="dish-number">菜品{{index + 1}}</view>
+      
+      <!-- 菜品名称 -->
+      <view class="form-item">
+        <view class="form-label">
+          菜品名称
+          <text class="char-count">{{item.name.length}}/20</text>
+        </view>
+        <input 
+          class="form-input" 
+          placeholder="菜品名称" 
+          value="{{item.name}}" 
+          bindinput="onDishNameInput"
+          bindblur="onDishNameBlur"
+          data-index="{{index}}"
+          maxlength="20"
+        />
+      </view>
+
+      <!-- 标记按钮 -->
+      <view class="form-item">
+        <view class="form-label">标记为</view>
+        <view class="rating-buttons">
+          <view 
+            class="rating-btn {{item.rating === 'must-try' ? 'active' : ''}}" 
+            bindtap="onSelectRating" 
+            data-index="{{index}}"
+            data-rating="must-try"
+          >
+            <text class="rating-btn-text">必点</text>
+          </view>
+          <view 
+            class="rating-btn {{item.rating === 'avoid' ? 'active' : ''}}" 
+            bindtap="onSelectRating" 
+            data-index="{{index}}"
+            data-rating="avoid"
+          >
+            <text class="rating-btn-text">避坑</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 菜品笔记 -->
+      <view class="form-item">
+        <view class="form-label">
+          菜品笔记（可选）
+          <text class="char-count">{{item.note.length}}/50</text>
+        </view>
+        <textarea 
+          class="form-textarea" 
+          placeholder="记录一下这道菜..." 
+          value="{{item.note}}" 
+          bindinput="onDishNoteInput"
+          data-index="{{index}}"
+          maxlength="50"
+          auto-height
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部占位 -->
+  <view class="bottom-placeholder"></view>
+
+  <!-- 固定底部按钮 -->
+  <view class="fixed-bottom">
+    <view class="action-buttons">
+      <view class="action-btn btn-cancel" bindtap="onCancel">
+        <text class="action-btn-text">取消</text>
+      </view>
+      <view class="action-btn btn-save" bindtap="onSave">
+        <text class="action-btn-text">保存</text>
+      </view>
+    </view>
+  </view>
+</view>

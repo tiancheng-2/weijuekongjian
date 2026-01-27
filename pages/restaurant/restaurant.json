@@ -1,0 +1,6 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "餐厅详情",
+  "enablePullDownRefresh": true,
+  "navigationStyle": "default"
+}

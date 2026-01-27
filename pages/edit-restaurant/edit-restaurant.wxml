@@ -1,44 +1,72 @@
 <!--pages/edit-restaurant/edit-restaurant.wxml-->
-<view class="page-container">
-
-  <!-- 餐厅名称输入框 -->
-  <view class="restaurant-name-section">
-    <input
-      class="restaurant-name-input"
-      model:value="{{name}}"
-      placeholder="Restaurant Name"
-      placeholder-class="name-placeholder"
-      maxlength="50"
-      confirm-type="next"
-    />
-  </view>
-
-  <!-- 标签选择器 -->
-  <view class="tags-section">
-    <text class="section-label">Tags</text>
-    <scroll-view class="tags-scroll" scroll-x show-scrollbar="{{false}}">
-      <view class="tags-container">
-        <view
-          class="tag-item {{item.selected ? 'tag-selected' : ''}}"
-          wx:for="{{tags}}"
-          wx:key="label"
-          bindtap="onToggleTag"
-          data-index="{{index}}"
-        >
-          <text class="tag-text">{{item.label}}</text>
-        </view>
+<view class="container">
+  <!-- 表单 -->
+  <view class="form">
+    <!-- 餐厅名称 -->
+    <view class="form-item">
+      <view class="form-label">
+        餐厅名称
+        <text class="char-count">{{restaurantName.length}}/15</text>
       </view>
-    </scroll-view>
+      <input 
+        class="form-input" 
+        placeholder="请输入餐厅名称" 
+        value="{{restaurantName}}" 
+        bindinput="onNameInput"
+        maxlength="15"
+      />
+    </view>
+
+    <!-- 餐厅地址 -->
+    <view class="form-item">
+      <view class="form-label">
+        餐厅地址（可选）
+        <text class="char-count">{{restaurantAddress.length}}/30</text>
+      </view>
+      <input 
+        class="form-input" 
+        placeholder="请输入餐厅地址" 
+        value="{{restaurantAddress}}" 
+        bindinput="onAddressInput"
+        maxlength="30"
+      />
+    </view>
   </view>
 
   <!-- 底部占位 -->
-  <view class="bottom-spacer"></view>
+  <view class="bottom-placeholder"></view>
 
-  <!-- 保存按钮（固定在底部） -->
-  <view class="save-button-container">
-    <button class="save-button" bindtap="onSave">
-      <text class="save-button-text">Save</text>
-    </button>
+  <!-- 固定底部按钮 -->
+  <view class="fixed-bottom">
+    <!-- 取消和保存按钮并列一行 -->
+    <view class="action-buttons">
+      <view class="action-btn btn-cancel" bindtap="onCancel">
+        <text class="action-btn-text">取消</text>
+      </view>
+      <view class="action-btn btn-save" bindtap="onSave">
+        <text class="action-btn-text">保存</text>
+      </view>
+    </view>
+
+    <!-- 删除按钮单独一行 -->
+    <view class="delete-btn" bindtap="onShowDeleteModal">
+      <text class="delete-btn-text">删除这家餐厅</text>
+    </view>
   </view>
 
+  <!-- 删除确认弹窗 -->
+  <view wx:if="{{showDeleteModal}}" class="modal-mask" bindtap="onHideDeleteModal">
+    <view class="modal-content" catchtap="doNothing">
+      <view class="modal-title">确认删除</view>
+      <view class="modal-desc">删除后无法恢复，餐厅及其所有菜品都将被删除</view>
+      <view class="modal-actions">
+        <view class="modal-btn modal-btn-cancel" bindtap="onHideDeleteModal">
+          <text class="modal-btn-text">取消</text>
+        </view>
+        <view class="modal-btn modal-btn-confirm" bindtap="onConfirmDelete">
+          <text class="modal-btn-text">确认删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

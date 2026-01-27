@@ -1,232 +1,265 @@
 // pages/dish/dish.js
-const restaurantService = require('../../services/restaurantService');
+const validator = require('../../utils/validator');
 
 Page({
-  /**
-   * 页面的初始数据
-   */
   data: {
-    // 菜品ID
     dishId: '',
-
-    // 餐厅ID
+    dishName: '',
+    rating: 'must-try',
+    photos: [],
+    note: '',
     restaurantId: '',
-
-    // 餐厅名称
     restaurantName: '',
-
-    // 菜品详情
-    dish: {},
-
-    // 加载状态
-    loading: true
+    isEditing: false,
+    // 编辑状态的数据
+    editingName: '',
+    editingRating: '',
+    editingNote: ''
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-    console.log('[Dish] Page loaded with options:', options);
-
-    const { id, restaurantId, restaurantName } = options;
-
+    const { id, name, rating, photos, note, restaurantId, restaurantName } = options;
+    
     if (!id) {
       wx.showToast({
-        title: '缺少菜品ID',
-        icon: 'none',
-        duration: 2000
+        title: '参数错误',
+        icon: 'none'
       });
-
       setTimeout(() => {
         wx.navigateBack();
-      }, 2000);
-
+      }, 1500);
       return;
+    }
+
+    // 处理照片
+    let photoList = [];
+    if (photos && photos !== 'undefined') {
+      const photoUrl = decodeURIComponent(photos);
+      if (photoUrl) {
+        photoList = [photoUrl];
+      }
     }
 
     this.setData({
       dishId: id,
+      dishName: decodeURIComponent(name || ''),
+      rating: rating || 'must-try',
+      photos: photoList,
+      note: note ? decodeURIComponent(note) : '',
       restaurantId: restaurantId || '',
-      restaurantName: decodeURIComponent(restaurantName || '餐厅')
+      restaurantName: restaurantName ? decodeURIComponent(restaurantName) : ''
     });
-
-    this.loadDishData(id);
   },
 
-  /**
-   * 加载菜品数据
-   */
-  async loadDishData(id) {
-    try {
-      this.setData({ loading: true });
+  // 查看照片
+  viewPhoto(e) {
+    const { index } = e.currentTarget.dataset;
+    wx.previewImage({
+      urls: this.data.photos,
+      current: this.data.photos[index]
+    });
+  },
 
-      // 获取菜品详情
-      const dish = await restaurantService.getDishDetail(id);
+  // 进入编辑模式
+  onEdit() {
+    this.setData({
+      isEditing: true,
+      editingName: this.data.dishName,
+      editingRating: this.data.rating,
+      editingNote: this.data.note
+    });
+  },
 
-      console.log('[Dish] Dish loaded:', dish);
+  // 编辑菜品名称（实时验证）
+  onEditNameInput(e) {
+    const value = validator.validateDishName(e.detail.value);
+    this.setData({
+      editingName: value
+    });
+  },
 
-      this.setData({
-        dish,
-        loading: false
-      });
+  // 编辑菜品笔记（实时验证）
+  onEditNoteInput(e) {
+    const value = validator.validateDishNote(e.detail.value);
+    this.setData({
+      editingNote: value
+    });
+  },
 
-    } catch (error) {
-      console.error('[Dish] Load failed:', error);
+  // 选择编辑属性
+  onEditRatingChange(e) {
+    const { rating } = e.currentTarget.dataset;
+    this.setData({
+      editingRating: rating
+    });
+  },
 
-      this.setData({ loading: false });
+  // 保存编辑
+  onSave() {
+    const { dishId, editingName, editingRating, editingNote, rating, restaurantId } = this.data;
 
+    // 验证菜品名称
+    if (validator.isEmpty(editingName)) {
       wx.showToast({
-        title: '加载失败',
-        icon: 'none',
-        duration: 2000
+        title: '请输入菜品名称',
+        icon: 'none'
       });
-
-      setTimeout(() => {
-        wx.navigateBack();
-      }, 2000);
-    }
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-    console.log('[Dish] Page show');
-  },
-
-  /**
-   * 跳转到餐厅详情
-   */
-  onNavigateToRestaurant() {
-    const { restaurantId, restaurantName } = this.data;
-
-    if (!restaurantId) {
       return;
     }
 
-    console.log('[Dish] Navigate to restaurant:', restaurantId);
+    if (!validator.isLengthValid(editingName, 1, 20)) {
+      wx.showToast({
+        title: '菜品名称为1-20字',
+        icon: 'none'
+      });
+      return;
+    }
 
-    wx.vibrateShort({ type: 'light' });
+    // 验证菜品笔记（可选）
+    if (editingNote && !validator.isEmpty(editingNote)) {
+      if (!validator.isLengthValid(editingNote, 0, 50)) {
+        wx.showToast({
+          title: '菜品笔记不超过50字',
+          icon: 'none'
+        });
+        return;
+      }
+    }
 
-    wx.navigateTo({
-      url: `/pages/detail/index?id=${restaurantId}&name=${encodeURIComponent(restaurantName)}`
+    wx.showLoading({
+      title: '保存中...',
+      mask: true
+    });
+
+    const db = wx.cloud.database();
+    const _ = db.command;
+
+    // 更新菜品
+    db.collection('dishes')
+      .doc(dishId)
+      .update({
+        data: {
+          dishName: editingName.trim(),
+          rating: editingRating,
+          note: editingNote.trim()
+        }
+      })
+      .then(res => {
+        // 如果属性改变了，需要更新餐厅统计
+        if (rating !== editingRating) {
+          const oldUpdate = rating === 'must-try' 
+            ? { mustTryCount: _.inc(-1) }
+            : { avoidCount: _.inc(-1) };
+          const newUpdate = editingRating === 'must-try'
+            ? { mustTryCount: _.inc(1) }
+            : { avoidCount: _.inc(1) };
+
+          return db.collection('restaurants')
+            .doc(restaurantId)
+            .update({
+              data: {
+                ...oldUpdate,
+                ...newUpdate
+              }
+            });
+        }
+        return Promise.resolve();
+      })
+      .then(res => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success',
+          duration: 1000
+        });
+
+        // 保存成功后自动返回餐厅详情页
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1000);
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('保存失败', err);
+        wx.showToast({
+          title: '保存失败',
+          icon: 'none'
+        });
+      });
+  },
+
+  // 取消编辑
+  onCancel() {
+    this.setData({
+      isEditing: false,
+      editingName: '',
+      editingRating: '',
+      editingNote: ''
     });
   },
 
-  /**
-   * 编辑菜品
-   */
-  onEdit() {
-    console.log('[Dish] Edit dish');
-
-    wx.vibrateShort({ type: 'light' });
-
-    wx.showToast({
-      title: '编辑功能开发中',
-      icon: 'none',
-      duration: 1500
-    });
-
-    // TODO: 实现编辑功能
-    // wx.navigateTo({
-    //   url: `/pages/edit-dish/edit-dish?id=${this.data.dishId}`
-    // });
-  },
-
-  /**
-   * 删除菜品
-   */
-  onDelete() {
-    const { dishId, dish } = this.data;
-
-    console.log('[Dish] Delete dish:', dishId);
-
-    wx.vibrateShort({ type: 'medium' });
-
+  // 删除菜品
+  onDeleteDish() {
     wx.showModal({
       title: '确认删除',
-      content: `确定要删除菜品"${dish.dishName || dish.name}"吗？`,
+      content: '删除后无法恢复，确定要删除这道菜吗？',
       confirmText: '删除',
-      confirmColor: '#FF3B30',
-      cancelText: '取消',
-      success: async (res) => {
+      confirmColor: '#EF4444',
+      success: res => {
         if (res.confirm) {
-          await this.deleteDish(dishId);
+          this.performDelete();
         }
       }
     });
   },
 
-  /**
-   * 执行删除操作
-   */
-  async deleteDish(id) {
-    try {
-      wx.showLoading({
-        title: '删除中...',
-        mask: true
-      });
+  // 执行删除
+  performDelete() {
+    const { dishId, rating, restaurantId } = this.data;
 
-      await restaurantService.deleteDish(id);
-
-      wx.hideLoading();
-
-      console.log('[Dish] Deleted successfully');
-
-      wx.vibrateShort({ type: 'heavy' });
-
-      wx.showToast({
-        title: '删除成功',
-        icon: 'success',
-        duration: 1500
-      });
-
-      setTimeout(() => {
-        wx.navigateBack({
-          delta: 1
-        });
-      }, 1500);
-
-    } catch (error) {
-      console.error('[Dish] Delete failed:', error);
-
-      wx.hideLoading();
-
-      wx.showToast({
-        title: error.message || '删除失败',
-        icon: 'none',
-        duration: 2000
-      });
-    }
-  },
-
-  /**
-   * 下拉刷新
-   */
-  async onPullDownRefresh() {
-    console.log('[Dish] Pull down refresh');
-
-    await this.loadDishData(this.data.dishId);
-
-    wx.stopPullDownRefresh();
-
-    wx.showToast({
-      title: '刷新成功',
-      icon: 'success',
-      duration: 1500
+    wx.showLoading({
+      title: '删除中...',
+      mask: true
     });
-  },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-    const { dish } = this.data;
+    const db = wx.cloud.database();
+    const _ = db.command;
 
-    return {
-      title: `${dish.dishName || dish.name} - 味觉空间`,
-      path: `/pages/dish/dish?id=${this.data.dishId}`,
-      imageUrl: dish.photoUrl || 'https://placehold.co/400x400/FDFCFB/2C3E50?text=Taste+Space'
-    };
+    // 删除菜品
+    db.collection('dishes')
+      .doc(dishId)
+      .remove()
+      .then(res => {
+        // 更新餐厅统计
+        const updateData = rating === 'must-try' 
+          ? { mustTryCount: _.inc(-1) }
+          : { avoidCount: _.inc(-1) };
+
+        return db.collection('restaurants')
+          .doc(restaurantId)
+          .update({
+            data: updateData
+          });
+      })
+      .then(res => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '删除成功',
+          icon: 'success',
+          duration: 1500
+        });
+
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1500);
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('删除失败', err);
+        wx.showToast({
+          title: '删除失败',
+          icon: 'none'
+        });
+      });
   }
 });
